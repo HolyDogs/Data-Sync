@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.ApiWatcherMapper">
+
+    <select id="getApiInfo" resultType="com.thinvent.entity.ApiWatcher">
+        select * from API_WATCHER
+        <where>
+            <if test="provider!=null and provider!=''">
+                AND JKTGF like concat('%',concat(#{provider},'%'))
+            </if>
+            <if test="producer!=null and producer!=''">
+                AND JKDYF like concat('%',concat(#{producer},'%'))
+            </if>
+            <if test="result!=null and result!=''">
+                AND RESULT like concat('%',concat(#{result},'%'))
+            </if>
+            <if test="startTime!=null and startTime!=''">
+                AND to_date(to_char(DY_TIME,'yyyy/MM/dd'),'yyyy-MM-dd')<![CDATA[>=]]>to_date(#{startTime},'YYYY-MM-DD')
+            </if>
+            <if test="endTime!=null and endTime!=''">
+                AND to_date(to_char(DY_TIME,'yyyy/MM/dd'),'yyyy-MM-dd')<![CDATA[<=]]>to_date(#{endTime},'YYYY-MM-DD')
+            </if>
+        </where>
+        ORDER BY DY_TIME DESC
+    </select>
+
+</mapper>

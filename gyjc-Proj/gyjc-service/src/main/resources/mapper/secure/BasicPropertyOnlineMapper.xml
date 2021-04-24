@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.secure.BasicPropertyOnlineMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, IP, PORT, TYPE, LNG, LAT, MANUFACTURER, MODEL, OPERATORS, PROVINCE, CITY, INFO, BELONG_COMPANY, FOUND_TIME, LEAK_ID, AREA_ID, LEAK_DESC
+    </sql>
+
+    <update id="truncateTable">
+        truncate table BASIC_PROPERTY_ONLINE
+    </update>
+
+</mapper>

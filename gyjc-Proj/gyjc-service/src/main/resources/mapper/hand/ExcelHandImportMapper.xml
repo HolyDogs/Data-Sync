@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.ExcelHandImportMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, ZBFL, ZBMC, JLDW, SZ, DQMC, SJID, SJLY
+    </sql>
+
+    <insert id="insertIntoZbTableFromHandImport">
+         INSERT INTO ${tableName}
+         (SELECT LOWER(RAWTOHEX(sys_guid())) AS ID,
+         #{zbmc} AS ZBMC,
+         A.SZ AS VALUE,
+         'EXCEL_HAND_IMPORT' AS DATA_SOURCE,
+         B.QSSJ,
+         B.JZSJ,
+         A.SJID AS TIME_ID,
+         NULL AS DWMC,
+         A.DQMC,
+         A.DQBM,
+         #{jldw} AS JLDW,
+         #{zbkey} AS ZBKEY
+         FROM EXCEL_HAND_IMPORT A, DIC_DATE_ZB B
+         WHERE A.ZBKEY=#{zbkey} AND A.SJID = B.ID
+        <if test="startTime!=null and startTime!=''">
+            And to_number(substr(A.SJID,3,6))<![CDATA[>=]]>to_number(#{startTime})
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            And to_number(substr(A.SJID,3,6))<![CDATA[<=]]>to_number(#{endTime})
+        </if>
+         )
+    </insert>
+
+</mapper>

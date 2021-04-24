@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.PoolZbNewTableZsMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, TABLE_NAME, ZBID, CREATE_TIME, TABLE_COMMENTS, PARENT_TABLE
+    </sql>
+
+    <insert id="insertDataToZsTable">
+        INSERT INTO ${tableName} (ID, ZBMC, VALUE, DATA_SOURCE, START_DATE, END_DATE, DWMC, DQMC, STATE, STATISTIC_MARK)
+        VALUES(#{map.id}, #{map.zbmc}, #{map.value}, #{map.dataSource}
+        , #{map.startDate}, #{map.endDate},#{map.dwmc}, #{map.dqmc},#{map.state}, #{map.statisticMark})
+    </insert>
+
+    <update id="dropTable">
+        DROP TABLE ${tableName}
+    </update>
+
+    <update id="updateNewValueOfZsTable">
+        UPDATE ${tableName} SET NEW_VALUE = #{newValue} WHERE ID = #{dataId}
+    </update>
+
+    <update id="updateStateOfZsTableByDateRange">
+        UPDATE ${tableName} SET STATE = #{state} WHERE ZBMC = #{zbmc} AND DATA_SOURCE = #{dataSource}
+        <if test="startDate!=null and startDate!=''">
+            AND START_DATE <![CDATA[ >= ]]> #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            AND END_DATE <![CDATA[ <= ]]> #{endDate}
+        </if>
+    </update>
+
+    <update id="setUnVisibleZsZbDataRange">
+        UPDATE ${tableName} SET STATE = #{state} WHERE ZBMC = #{zbmc} AND DATA_SOURCE = #{dataSource}
+        <if test="startDate!=null and startDate!=''">
+            AND START_DATE <![CDATA[ < ]]> #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            AND END_DATE <![CDATA[ > ]]> #{endDate}
+        </if>
+    </update>
+
+    <update id="createZsTjTable">
+        CREATE TABLE ${tableName}(
+          ID VARCHAR2(34) NOT NULL,
+          ZBMC VARCHAR2(255),
+          VALUE VARCHAR2(20),
+          JLDW VARCHAR2(20),
+          DATA_SOURCE VARCHAR2(40),
+          LYZS_TABLE VARCHAR2(40),
+          NF CHAR(4),
+          YFORJD VARCHAR2(2),
+          TIME_ID VARCHAR2(20),
+          DQMC VARCHAR2(100),
+          DQBM VARCHAR2(30),
+          NEW_VALUE VARCHAR(20),
+          STATE CHAR(1),
+          STATISTIC_MARK VARCHAR2(20),
+          ZBKEY VARCHAR2(30),
+          DWMC VARCHAR2(200),
+          PRIMARY KEY(ID)
+        )
+    </update>
+
+    <delete id="deleteZsZbData">
+        DELETE FROM ${tableName} WHERE ZBKEY=#{zbkey}
+    </delete>
+
+    <select id="countValueGroupByArea" resultType="java.util.HashMap">
+        SELECT SUM(CASE WHEN VALUE='无' THEN 0 ELSE TO_NUMBER(VALUE) END) sumValue, DQMC FROM ${tableName}
+        WHERE ZBMC=#{zbmc} AND DATA_SOURCE=#{dataSource} AND STATISTIC_MARK IS NULL
+        GROUP BY DQMC
+    </select>
+
+    <select id="countValueGroupByMonth" resultType="java.util.HashMap">
+        SELECT SUM(CASE WHEN VALUE='无' THEN 0 ELSE TO_NUMBER(VALUE) END) sumValue, START_DATE, END_DATE FROM ${tableName}
+        WHERE ZBMC=#{zbmc} AND DATA_SOURCE=#{dataSource} AND STATISTIC_MARK IS NULL
+        GROUP BY START_DATE,END_DATE
+    </select>
+
+    <select id="countValueGroupByQuarter" resultType="java.util.HashMap">
+        SELECT
+        SUM( CASE WHEN VALUE = '无' THEN 0 ELSE TO_NUMBER( VALUE ) END ) sumValue,
+        (
+        CASE
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 4 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-1'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 3 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 7 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-2'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 6 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 10 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-3'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 9 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-4'
+        END ) AS quater
+        FROM
+        ${tableName}
+        WHERE
+        ZBMC = #{zbmc}
+        AND DATA_SOURCE = #{dataSource}
+        AND STATISTIC_MARK IS NULL
+        GROUP BY
+        (
+        CASE
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 4 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-1'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 3 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 7 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-2'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 6 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 10 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-3'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 9 THEN
+        SUBSTR( START_DATE, 0, 4 ) || '-4'
+        END )
+
+    </select>
+
+    <select id="countValueGroupByYear" resultType="java.util.HashMap">
+        SELECT
+            SUM( CASE WHEN VALUE = '无' THEN 0 ELSE TO_NUMBER( VALUE ) END ) sumValue,
+            SUBSTR( START_DATE, 0, 4 ) year
+        FROM
+            ${tableName}
+        WHERE
+            ZBMC = #{zbmc}
+            AND DATA_SOURCE = #{dataSource}
+            AND STATISTIC_MARK IS NULL
+        GROUP BY
+            SUBSTR( START_DATE, 0, 4 )
+    </select>
+
+    <select id="checkCountDataExist" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM ${tableName} where ZBMC = #{zbmc}
+        AND DATA_SOURCE = #{dataSource}
+        AND STATISTIC_MARK = #{statisticMark}
+    </select>
+
+
+</mapper>

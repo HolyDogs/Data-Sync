@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.BasestationMapper">
+
+
+    <select id="getEarthStations" resultType="com.thinvent.entity.SatelliteEarthStation">
+        SELECT * FROM SATELLITE_EARTH_STATION
+        <where>
+            <if test="bhqdsbh!=null and bhqdsbh!=''">
+                and BHQDSBH like concat('%',concat(#{bhqdsbh},'%'))
+            </if>
+            <if test="yhdwmc!=null and yhdwmc!=''">
+                and YHDWMC like concat('%',concat(#{yhdwmc},'%'))
+            </if>
+            <if test="lxr!=null and lxr!=''">
+                and LXR like concat('%',concat(#{lxr},'%'))
+            </if>
+            <if test="startDate!=null and startDate!=''">
+                and to_date(QRSJ,'yyyy-MM-dd') <![CDATA[>=]]> to_date(#{startDate},'yyyy-MM-dd')
+                and ID in (SELECT t.ID FROM SATELLITE_EARTH_STATION t WHERE t.QRSJ like '%.%')
+            </if>
+            <if test="endDate!=null and endDate!=''">
+                and to_date(QRSJ,'yyyy-MM-dd') <![CDATA[<=]]> to_date(#{endDate},'yyyy-MM-dd')
+                and ID in (SELECT t.ID FROM SATELLITE_EARTH_STATION t WHERE t.QRSJ like '%.%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getUseSchedules" resultType="com.thinvent.entity.BasestationUseSchedule">
+        SELECT * FROM BASESTATION_USE_SCHEDULE
+        <where>
+            <if test="jzsyh!=null and jzsyh!=''">
+                And JZSYH like concat('%',concat(#{jzsyh},'%'))
+            </if>
+            <if test="tzszsyr!=null and tzszsyr!=''">
+                And TZSZSYR like concat('%',concat(#{tzszsyr},'%'))
+            </if>
+            <if test="lxr!=null and lxr!=''">
+                And LXR like concat('%',concat(#{lxr},'%'))
+            </if>
+            <if test="jzlx!=null and jzlx!=''">
+                And JZLX like concat('%',concat(#{jzlx},'%'))
+            </if>
+            <if test="jzzt!=null and jzzt!=''">
+                And JZZT like concat('%',concat(#{jzzt},'%'))
+            </if>
+            <if test="startDate!=null and startDate!=''">
+                and JZSJ <![CDATA[>=]]> to_date(#{startDate},'yyyy-MM-dd')
+            </if>
+            <if test="endDate!=null and endDate!=''">
+                and JZSJ <![CDATA[<=]]> to_date(#{endDate},'yyyy-MM-dd')
+            </if>
+        </where>
+    </select>
+
+    <select id="getCoordinations" resultType="com.thinvent.entity.BasestationCoordination">
+        SELECT * FROM BASESTATION_COORDINATION
+        <where>
+            <if test="bhqdsbh!=null and bhqdsbh!=''">
+                and BHQDSBH like concat('%',concat(#{bhqdsbh},'%'))
+            </if>
+            <if test="yhdwmc!=null and yhdwmc!=''">
+                and YHDWMC like concat('%',concat(#{yhdwmc},'%'))
+            </if>
+            <if test="sfxyxt!=null and sfxyxt!=''">
+                and SFXYXT =#{sfxyxt}
+            </if>
+            <if test="sfyfqxtqq!=null and sfyfqxtqq!=''">
+                and SFYFQXTQQ =#{sfyfqxtqq}
+            </if>
+            <if test="sfyqrxtqq!=null and sfyqrxtqq!=''">
+                and SFYQRXTQQ =#{sfyqrxtqq}
+            </if>
+            <if test="sfywcxt!=null and sfywcxt!=''">
+                and SFYWCXT =#{sfywcxt}
+            </if>
+        </where>
+    </select>
+
+</mapper>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" addBOMForNewFiles="with NO BOM">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-entity" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-receive" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-service" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-statistics" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-task" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gyjc-web" charset="UTF-8" />
+  </component>
+</project>

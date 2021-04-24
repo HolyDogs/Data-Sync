@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="gyjc-api" />
+        <module name="gyjc-common" />
+        <module name="gyjc-entity" />
+        <module name="gyjc-service" />
+        <module name="gyjc-statistics" />
+        <module name="gyjc-task" />
+        <module name="gyjc-web" />
+        <module name="gyjcapi" />
+        <module name="gyjccommon" />
+        <module name="gyjcentity" />
+        <module name="gyjcreceive" />
+        <module name="gyjcservice" />
+        <module name="gyjcstatistics" />
+        <module name="gyjctask" />
+        <module name="gyjcweb" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="gyjcaop" target="1.8" />
+      <module name="gyjcconfig" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

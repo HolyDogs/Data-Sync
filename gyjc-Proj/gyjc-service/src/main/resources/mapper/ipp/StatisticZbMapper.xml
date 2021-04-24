@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.StatisticZbMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ZBTJ_ID, NF, YF, ZBID, ZBMC, SZ, SJLY, ZBFL, CREATE_TIME, SJID
+    </sql>
+
+    <select id="getZbflSelectList" resultType="java.lang.String">
+        SELECT DISTINCT ZBFL FROM STATISTIC_ZB
+    </select>
+
+    <select id="getStatisticList" resultType="com.thinvent.entity.StatisticZb">
+        SELECT * FROM STATISTIC_ZB
+        <where>
+            <if test="zbmc!=null and zbmc!=''">
+                AND ZBMC like concat('%',concat(#{zbmc},'%'))
+            </if>
+            <if test="zbfl!=null and zbfl!=''">
+                AND ZBFL = #{zbfl}
+            </if>
+            <if test="startTime!=null and startTime!=''">
+                AND ((substr(SJID,3,4)=substr(#{startTime},1,4) and
+                (case when substr(SJID,1,1) ='M' then to_number(substr(SJID,7,2))
+                when substr(SJID,1,1) ='Y' then 12 end)<![CDATA[ >= ]]>to_number(substr(to_char(to_date(#{startTime},'YYYY-MM-DD'),'YYYY-MM'),6,2)))
+                or substr(SJID,3,4)<![CDATA[ > ]]>substr(#{startTime},1,4))
+            </if>
+            <if test="endTime!=null and endTime!=''">
+                AND ((substr(SJID,3,4)=substr(#{endTime},1,4) and
+                (case when substr(SJID,1,1) ='M' then to_number(substr(SJID,7,2))
+                when substr(SJID,1,1) ='Y' then 1 end)<![CDATA[ <= ]]>to_number(substr(to_char(to_date(#{endTime},'YYYY-MM-DD'),'YYYY-MM'),6,2)))
+                or substr(SJID,3,4)<![CDATA[ < ]]>substr(#{endTime},1,4))
+            </if>
+        </where>
+        ORDER BY CREATE_TIME DESC,NF DESC, YF DESC
+    </select>
+
+</mapper>

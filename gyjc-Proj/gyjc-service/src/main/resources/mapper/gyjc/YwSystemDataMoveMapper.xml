@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.YwSystemDataMoveMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        SJQY_ID, QSSJ, JZSJ, SJID, ZBID, ZBMC, ZBMCFZ, SZ, DWID, DWMC, DQID, DQMC, LYID, TIMEID
+    </sql>
+
+    <select id="getSelectList" resultType="java.util.HashMap">
+        SELECT YWXTLY_ID value, ZBFL label FROM YW_SYSTEM_DATA_SOURCE
+    </select>
+
+    <select id="getDataCount" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM ${tableName}
+    </select>
+
+    <select id="getSafeDataCount" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM ${tableName}
+    </select>
+
+    <select id="getLastMonthDataCount" resultType="java.lang.Integer">
+        SELECT DATA_COUNT
+        FROM GYJC_DATA_STATISTIC_COUNT WHERE TABLE_NAME = #{tableName} AND DATE_KEY = '月度' AND DATE_VALUE=TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'yyyy-MM')
+    </select>
+
+    <insert id="insertIntoCountTableLastDayOfMonth">
+        INSERT INTO GYJC_DATA_STATISTIC_COUNT(ID, DATE_VALUE, DATE_KEY, TABLE_NAME, DATA_COUNT)
+        VALUES(
+        (SELECT LOWER(RAWTOHEX(sys_guid())) FROM DUAL)
+        , (SELECT TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'yyyy-MM') from dual)
+        , '月度'
+        , #{tableName}
+        , (SELECT COUNT(1) FROM ${tableName})
+        )
+    </insert>
+
+    <insert id="insertIntoCountTableLastDayOfMonthSpecial">
+        INSERT INTO GYJC_DATA_STATISTIC_COUNT(ID, DATE_VALUE, DATE_KEY, TABLE_NAME, DATA_COUNT)
+        VALUES(
+              (SELECT LOWER(RAWTOHEX(sys_guid())) FROM DUAL)
+              , (SELECT TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'yyyy-MM') from dual)
+              , '月度'
+              , #{tableName}
+              , #{countNum}
+              )
+    </insert>
+
+</mapper>

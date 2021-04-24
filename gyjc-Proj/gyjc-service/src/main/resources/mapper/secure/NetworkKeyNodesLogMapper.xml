@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.secure.NetworkKeyNodesLogMapper">
+
+    <!-- 开启二级缓存 -->
+    <!--<cache type="org.mybatis.caches.ehcache.LoggingEhcache"/>-->
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, TRIGGER_DATE, ALARM_CATEGORY, EVENT_TYPE, EVENT_TYPE_CODE, ALARM_NAME, BEHAVIOR_NAME, LEVEL, SRC_IP, DST_IP, SRC_PORT, DST_PORT, SRC_COUNTRY_NAME, SRC_PROVINCE_NAME, SRC_CITY_NAME, X_REAL_IP, X_FORWARDED_FOR, PAYLOAD, WL_PROXY_CLIENT_IP, HOST, LINK_ID, ALARM_CONTITION, DEVICEID_LINKID, DEVICE_ID
+    </sql>
+
+</mapper>

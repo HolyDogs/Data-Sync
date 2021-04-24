@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.SDictionaryItemsMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ITEM_GUID, GROUP_NO, ITEM_KEY, ITEM_PARENT, ITEM_VALUE, ITEM_FULL_VALUE, AREA_LEVEL, PXH, ENABLE, VERSION, CREATE_USER_ID, CREATE_USER_NAME, CREATE_TIME, UPDATE_USER_ID, UPDATE_USER_NAME, UPDATE_TIME, AREA_CODE, DATA_TYPE
+    </sql>
+
+</mapper>

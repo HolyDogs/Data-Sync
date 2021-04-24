@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.thinvent.mapper.ZsTjTableMapper">
+
+    <insert id="insertOriginData">
+        INSERT INTO ${tjTableName}
+        (SELECT LOWER(RAWTOHEX(sys_guid())) AS ID,
+          case when P.COMMENTS is null then P.ZBMC
+            else P.COMMENTS end as ZBMC,
+          A.VALUE,
+          A.JLDW,
+          A.DATA_SOURCE,
+          #{tableName} AS LYZS_TABLE,
+          SUBSTR(A.TIME_ID, 3, 4) AS NF,
+          (CASE WHEN A.TIME_ID LIKE 'Y%' THEN NULL ELSE SUBSTR(A.TIME_ID, 7, 2) END) AS YFORJD,
+          A.TIME_ID,
+          A.DQMC,
+          A.DQBM,
+          A.NEW_VALUE,
+          A.STATE,
+          NULL AS STATISTIC_MARK,
+          A.ZBKEY,
+          A.DWMC
+          FROM ${tableName} A inner join POOL_ZB P on A.ZBKEY=P.ZBKEY
+          WHERE A.ZBKEY = #{zbkey}
+         )
+    </insert>
+
+    <insert id="insertTjData">
+        INSERT INTO ${tableName} (ID, ZBMC, VALUE, JLDW, DATA_SOURCE, LYZS_TABLE, NF, YFORJD, TIME_ID, DQMC, DQBM, NEW_VALUE, STATE, STATISTIC_MARK, ZBKEY, DWMC)
+        VALUES(#{theMap.ID}, #{theMap.ZBMC}, #{theMap.VALUE}, #{theMap.JLDW}, #{theMap.DATA_SOURCE}
+        , #{theMap.LYZS_TABLE}, #{theMap.NF}, #{theMap.YFORJD}, #{theMap.TIME_ID}, #{theMap.DQMC}, #{theMap.DQBM}
+        , #{theMap.NEW_VALUE}, #{theMap.STATE}, #{theMap.STATISTIC_MARK}, #{theMap.ZBKEY}, #{theMap.DWMC})
+    </insert>
+
+    <delete id="deleteTjData">
+        DELETE FROM ${tableName}
+        <where>
+            <choose>
+                <when test="dimention==null or dimention==''">
+                    ZBKEY=#{zbkey}
+                </when>
+                <when test="dimention=='原数据'">
+                    ZBKEY=#{zbkey} AND STATISTIC_MARK IS NULL
+                </when>
+                <when test="dimention=='重点企业统计'">
+                    ZBKEY='B999999'
+                </when>
+                <otherwise>
+                    ZBKEY=#{zbkey} AND STATISTIC_MARK = #{dimention}
+                </otherwise>
+            </choose>
+        </where>
+    </delete>
+
+    <select id="checkIsExistData" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM ${tjTableName} WHERE ZBKEY=#{zbkey}
+        <choose>
+            <when test="dimention!=null and dimention!=''">
+                AND STATISTIC_MARK = #{dimention}
+            </when>
+            <otherwise>
+                AND STATISTIC_MARK IS NULL
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="perMonthCount" resultType="java.util.HashMap">
+        SELECT SUM(TO_NUMBER(VALUE)) SUMVALUE, TIME_ID, DQMC, DQBM,  SUBSTR(TIME_ID, 3, 4) NF, SUBSTR(TIME_ID, 7, 2) YF, JLDW FROM ${tableName}
+        WHERE ZBKEY=#{zbkey} AND STATISTIC_MARK IS NULL AND DQBM LIKE '36%'
+        <if test="startDate!=null and startDate!=''">
+            AND START_DATE <![CDATA[ >= ]]> #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            AND START_DATE <![CDATA[ <= ]]> #{endDate}
+        </if>
+        GROUP BY TIME_ID,DQBM,JLDW,DQMC
+    </select>
+
+    <select id="perQuaterCount" resultType="java.util.HashMap">
+        SELECT
+        SUM(TO_NUMBER(VALUE)) SUMVALUE,
+        SUBSTR(START_DATE, 1, 4) NF,
+        (
+        CASE
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 4 THEN '1'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 3 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 7 THEN '2'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 6 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 10 THEN '3'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 9 THEN '4'
+        END ) AS YF,
+        DQMC,
+        DQBM,
+        JLDW
+        FROM
+        ${tableName}
+        WHERE
+        ZBKEY = #{zbkey}
+        AND STATISTIC_MARK IS NULL
+        AND DQBM LIKE '36%'
+        <if test="startDate!=null and startDate!=''">
+            AND START_DATE <![CDATA[ >= ]]> #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            AND START_DATE <![CDATA[ <= ]]> #{endDate}
+        </if>
+        GROUP BY
+        SUBSTR(START_DATE, 1, 4),
+        (
+        CASE
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 4 THEN '1'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 3 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 7 THEN '2'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 6 AND TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ < ]]> 10 THEN '3'
+        WHEN TO_NUMBER(
+        SUBSTR( START_DATE, 6, 2 )) <![CDATA[ > ]]> 9 THEN '4'
+        END ),
+        DQMC,
+        JLDW,
+        DQBM
+    </select>
+
+    <select id="perYearCount" resultType="java.util.HashMap">
+        SELECT SUM(TO_NUMBER(VALUE)) SUMVALUE, SUBSTR(START_DATE, 1, 4) NF, DQMC, DQBM, JLDW FROM ${tableName}
+        WHERE ZBKEY=#{zbkey} AND STATISTIC_MARK IS NULL AND DQBM LIKE '36%'
+        <if test="startDate!=null and startDate!=''">
+            AND START_DATE <![CDATA[ >= ]]> #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            AND START_DATE <![CDATA[ <= ]]> #{endDate}
+        </if>
+        GROUP BY SUBSTR(START_DATE, 1, 4),DQMC,JLDW,DQBM
+    </select>
+
+    <select id="selectTjValue" resultType="java.lang.String">
+        SELECT VALUE FROM ${tableName} WHERE ZBKEY=#{zbkey} AND DQBM = #{dqbm}
+        AND NF = #{nf} AND YFORJD = #{yforjd} AND STATISTIC_MARK = #{dimention}
+    </select>
+
+    <select id="calcuRankOfJX" resultType="java.util.HashMap">
+        SELECT RR.ROW_NUMBER SUMVALUE,'名' AS JLDW,SUBSTR(RR.TIME_ID, 3, 4) NF
+        ,SUBSTR(RR.TIME_ID, 7, 2) YF,RR.DQMC,RR.DQBM,RR.TIME_ID
+        FROM
+        (SELECT T.*,row_number() over(partition by TIME_ID order by TO_NUMBER(VALUE) DESC) ROW_NUMBER
+          FROM ${tableName} T
+          WHERE ZBKEY=#{zbkey} AND DQBM !='-1' AND VALUE IS NOT NULL
+        ) RR WHERE DQMC='江西省' OR DQBM='360000'
+    </select>
+
+    <select id="calcuRatioOfJX" resultType="java.util.HashMap">
+    SELECT DECODE(SUBSTR(ROUND(( A.VALUE / B.VALUE * 100 ),2),1,1),'.'
+    ,'0'||ROUND(( A.VALUE / B.VALUE * 100 ),2),ROUND(( A.VALUE / B.VALUE * 100 ),2)) SUMVALUE,
+    A.TIME_ID,
+    A.DQMC,
+    A.DQBM,
+    SUBSTR( A.TIME_ID, 3, 4 ) NF,
+    SUBSTR( A.TIME_ID, 7, 2 ) YF,
+    '%' JLDW
+    FROM
+        ${tableName} A,
+        ${tableName} B
+    WHERE
+        A.DQBM = '360000'
+        AND B.DQBM = '-1'
+        AND A.TIME_ID = B.TIME_ID
+        AND A.ZBKEY=#{zbkey}
+	    AND A.ZBKEY=B.ZBKEY
+	    AND A.DATA_SOURCE = B.DATA_SOURCE
+    ORDER BY
+        A.TIME_ID
+    </select>
+
+    <select id="getZsTjTableData" resultType="com.thinvent.dto.ZbZsTjTableDto">
+        SELECT * FROM ${tableName}
+        <where>
+            <if test="zbmc!=null and zbmc!=''">
+                AND ZBMC LIKE CONCAT(CONCAT('%', #{zbmc}), '%')
+            </if>
+            <if test="dqmc!=null and dqmc!=''">
+                AND DQMC LIKE CONCAT(CONCAT('%', #{dqmc}), '%')
+            </if>
+            <if test="dataSource!=null and dataSource!=''">
+                AND DATA_SOURCE = #{dataSource}
+            </if>
+            <if test="statisticMark!=null and statisticMark!=''">
+                <if test="statisticMark=='原数据'">
+                    AND STATISTIC_MARK IS NULL
+                </if>
+                <if test="statisticMark!='原数据'">
+                    AND STATISTIC_MARK = #{statisticMark}
+                </if>
+            </if>
+            <if test="startDate!=null and startDate!=''">
+                AND ((NF=substr(#{startDate},1,4) and
+                (case when STATISTIC_MARK like '年度%' then 12
+                 when STATISTIC_MARK like '季度%' then to_number(YFORJD)*3
+                else to_number(YFORJD) end)<![CDATA[ >= ]]>substr(to_char(to_date(#{startDate},'YYYY-MM-DD'),'YYYY-MM'),6,2))
+                or NF<![CDATA[ > ]]>substr(#{startDate},1,4))
+            </if>
+            <if test="endDate!=null and endDate!=''">
+                AND ((NF=substr(#{endDate},1,4) and
+                (case when STATISTIC_MARK like '年度%' then 1
+                 when STATISTIC_MARK like '季度%' then to_number(YFORJD)*3-2
+                else to_number(YFORJD) end)<![CDATA[ <= ]]>substr(to_char(to_date(#{endDate},'YYYY-MM-DD'),'YYYY-MM'),6,2))
+                or NF<![CDATA[ < ]]>substr(#{endDate},1,4))
+            </if>
+        </where>
+        ORDER BY ZBMC,STATISTIC_MARK,NF desc ,YFORJD desc ,DQMC
+    </select>
+
+    <select id="sumAreaPerMonthCount" resultType="java.util.HashMap">
+        SELECT SUM(TO_NUMBER(VALUE)) SUMVALUE, TIME_ID,'江西省' AS DQMC,'360000' AS DQBM,SUBSTR(TIME_ID, 3, 4) NF, SUBSTR(TIME_ID, 7, 2) YF, JLDW FROM ${tableName}
+        WHERE ZBKEY=#{zbkey} AND DQBM LIKE '36%' AND DQBM <![CDATA[ > ]]> '360000'
+        GROUP BY TIME_ID,JLDW
+    </select>
+
+    <select id="countDwNum" resultType="java.util.HashMap">
+        SELECT COUNT(DISTINCT DWMC) SUMVALUE,SUBSTR(TIME_ID, 3, 4) NF, SUBSTR(TIME_ID, 7, 2) YF,TIME_ID,DQBM,DQMC
+        FROM ${tableName}
+        WHERE DQBM LIKE '36%' AND DQBM <![CDATA[ > ]]> '360000' AND DWMC IS NOT NULL
+        AND ZBKEY IN
+        <foreach collection="keyList" item="theKey" open="(" close=")" separator=",">
+            #{theKey}
+        </foreach>
+        GROUP BY TIME_ID,DQBM,DQMC
+    </select>
+
+    <!-- 查询月度数据 -->
+    <select id="selectBaseTjData" resultType="java.util.HashMap">
+        SELECT VALUE AS SUMVALUE, TIME_ID, DQMC, DQBM, NF, YFORJD AS YF, JLDW FROM ${tjTableName}
+        WHERE ZBKEY=#{zbkey} AND STATISTIC_MARK = #{dimension} AND DQBM LIKE '36%'
+    </select>
+
+    <!-- 确认是否存在全省总计数据 -->
+    <select id="checkIsExistTjData" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM ${tjTableName} WHERE ZBKEY=#{zbkey} AND STATISTIC_MARK=#{dimension} AND DQBM=#{dqbm}
+    </select>
+
+    <select id="getYearData" resultType="java.util.HashMap">
+        with t as
+             (SELECT NF maxNF, max(temp.YF) maxYF
+                FROM (SELECT distinct (SUBSTR(TIME_ID, 3, 4)) NF,
+                                      SUBSTR(TIME_ID, 7, 2) YF
+                        FROM ${tableName}
+                       WHERE ZBKEY = #{zbkey}
+                         AND DQBM LIKE '36%'
+                        <if test="startDate!=null and startDate!=''">
+                            AND START_DATE <![CDATA[ >= ]]> #{startDate}
+                        </if>
+                        <if test="endDate!=null and endDate!=''">
+                            AND START_DATE <![CDATA[ <= ]]> #{endDate}
+                        </if>
+                         AND VALUE IS NOT NULL
+                       ORDER BY 1 DESC, 2 DESC) temp
+               group by temp.NF)
+            SELECT SUM(TO_NUMBER(VALUE)) as SUMVALUE,
+                   '' as TIME_ID,
+                   DQMC,
+                   DQBM,
+                   SUBSTR(TIME_ID, 3, 4) NF,
+                   '' as YF,
+                   JLDW
+              FROM ${tableName}
+             inner join t
+                on SUBSTR(TIME_ID, 3, 4) = t.maxNF
+             WHERE ZBKEY = #{zbkey}
+               AND DQBM LIKE '36%'
+               AND SUBSTR(TIME_ID, 7, 2) = t.maxYF
+             group by SUBSTR(TIME_ID, 3, 4),DQMC,DQBM,JLDW
+             ORDER BY TIME_ID DESC
+    </select>
+
+    <select id="getJdOfLjData" resultType="java.util.HashMap">
+        with temp2 as
+         (SELECT NF maxNF, JD maxJD, MAX(YF) maxYF
+            FROM (SELECT distinct (SUBSTR(TIME_ID, 3, 4)) NF,
+                                  CEIL(TO_NUMBER(SUBSTR(TIME_ID, 7, 2)) / 3) JD,
+                                  SUBSTR(TIME_ID, 7, 2) YF
+                    FROM ${tableName}
+                   WHERE ZBKEY = #{zbkey}
+                     AND DQBM LIKE '36%'
+                     AND VALUE IS NOT NULL
+                    <if test="startDate!=null and startDate!=''">
+                        AND START_DATE <![CDATA[ >= ]]> #{startDate}
+                    </if>
+                    <if test="endDate!=null and endDate!=''">
+                        AND START_DATE <![CDATA[ <= ]]> #{endDate}
+                    </if>
+                   ORDER BY 1 DESC, 3 DESC) temp
+           group by temp.NF, temp.JD
+           order by 1 desc, 2 desc)
+        SELECT SUM(TO_NUMBER(VALUE)) as SUMVALUE,
+               DQMC,
+               DQBM,
+               SUBSTR(START_DATE, 1, 4) NF,
+               temp2.maxJD YF,
+               JLDW
+          FROM ${tableName}
+         inner join temp2
+            on SUBSTR(TIME_ID, 3, 4) = temp2.maxNF
+         WHERE ZBKEY = #{zbkey}
+           AND SUBSTR(START_DATE, 6, 2) = temp2.maxYF
+           AND DQBM LIKE '36%'
+           AND STATISTIC_MARK IS NULL
+           GROUP BY SUBSTR(START_DATE, 1, 4),
+            temp2.maxJD,
+            JLDW,
+            DQBM,
+            DQMC
+    </select>
+
+    <select id="calRankOfComp" resultType="java.util.HashMap">
+        WITH RESULT AS (SELECT row_number() over(partition by TIME_ID
+        <if test="range == 1">
+            ,DQBM,DQMC
+        </if>
+         ORDER BY TO_NUMBER(VALUE) DESC) AS RANK, DWMC,
+         SUBSTR(TIME_ID, 3, 4) NF, SUBSTR(TIME_ID, 7, 2) YF,
+          <choose>
+              <when test="range == 1">
+                  DQBM, DQMC,
+              </when>
+              <otherwise>
+                  '360000' AS DQBM,
+                  '江西省' AS DQMC,
+              </otherwise>
+          </choose>
+           TIME_ID,
+           VALUE AS SUMVALUE,
+            JLDW
+            FROM ${tableName} WHERE ZBKEY = #{zbkey}
+            AND DWMC IS NOT NULL
+            AND VALUE IS NOT NULL
+            <if test="startDate!=null and startDate!=''">
+                AND START_DATE <![CDATA[ >= ]]> #{startDate}
+            </if>
+            <if test="endDate!=null and endDate!=''">
+                AND START_DATE <![CDATA[ <= ]]> #{endDate}
+            </if>
+            AND DQBM LIKE '36%')
+        SELECT * FROM RESULT
+        <where>
+            <if test="limit !=null and limit > 0">
+                RESULT.RANK <![CDATA[ <= ]]> #{limit}
+            </if>
+        </where>
+    </select>
+
+    <select id="calAvgOfQuater" resultType="java.util.HashMap">
+        WITH temp as (SELECT CEIL(TO_NUMBER(SUBSTR(TIME_ID, 7, 2)) / 3) JD,SUBSTR(TIME_ID, 3, 4) NF,
+         VALUE, JLDW, DQBM, DQMC FROM ${tableName} WHERE ZBKEY = #{zbkey}
+         AND VALUE IS NOT NULL AND DQBM LIKE '36%')
+        SELECT temp.JD AS YF, temp.NF, ROUND(AVG(temp.VALUE), 2) AS SUMVALUE, temp.JLDW, temp.DQBM, temp.DQMC
+         from temp
+        GROUP BY temp.JD, temp.NF, temp.JLDW, temp.DQBM, temp.DQMC
+    </select>
+
+    <select id="calAvgOfYear" resultType="java.util.HashMap">
+        SELECT SUBSTR(TIME_ID, 3, 4) NF, ROUND(AVG(VALUE), 2) SUMVALUE, JLDW, DQBM, DQMC
+        FROM ${tableName}
+        WHERE ZBKEY  = #{zbkey} AND VALUE IS NOT NULL AND DQBM LIKE '36%'
+        GROUP BY SUBSTR(TIME_ID, 3, 4),JLDW,DQBM,DQMC
+    </select>
+</mapper>

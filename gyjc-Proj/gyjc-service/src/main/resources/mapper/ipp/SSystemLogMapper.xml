@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.SSystemLogMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, CLIENT_IP, USER_ID, USER_NAME, LOG, LOG_TIME, CREATE_USER_ID, CREATE_USER_NAME, CREATE_TIME, UPDATE_USER_ID, UPDATE_USER_NAME, UPDATE_TIME, IS_DELETE
+    </sql>
+
+    <select id="getLogInfo" resultType="com.thinvent.entity.SSystemLog">
+        select * from (
+            select S.ID,S.CLIENT_IP,S.USER_ID,CASE WHEN U.LOGIN_NAME IS NULL THEN S.USER_NAME ELSE U.LOGIN_NAME END AS USER_NAME,U.FULL_NAME,S.LOG,S.LOG_TIME
+            from S_SYSTEM_LOG S left join S_USER U ON S.user_id=U.id
+            WHERE S.IS_DELETE=0 AND S.IS_EXCEPTION=0
+        )
+        <where>
+            <if test="loginName!=null and loginName!=''">
+                AND USER_NAME like concat('%',concat(#{loginName},'%'))
+            </if>
+            <if test="userName!=null and userName!=''">
+                AND FULL_NAME like concat('%',concat(#{userName},'%'))
+            </if>
+            <if test="startTime!=null and startTime!=''">
+                AND to_date(to_char(LOG_TIME,'yyyy/MM/dd'),'yyyy-MM-dd')<![CDATA[>=]]>to_date(#{startTime},'YYYY-MM-DD')
+            </if>
+            <if test="endTime!=null and endTime!=''">
+                AND to_date(to_char(LOG_TIME,'yyyy/MM/dd'),'yyyy-MM-dd')<![CDATA[<=]]>to_date(#{endTime},'YYYY-MM-DD')
+            </if>
+        </where>
+        ORDER BY LOG_TIME DESC
+    </select>
+
+</mapper>

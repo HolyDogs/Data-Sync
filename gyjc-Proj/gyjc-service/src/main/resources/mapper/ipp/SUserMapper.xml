@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinvent.mapper.SUserMapper">
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        ID, LOGIN_NAME, PASSWORD, FULL_NAME, SEX, PHONE, EMAIL, PXH, IS_DELETE, TYPE, CREATE_USER_ID, CREATE_USER_NAME, CREATE_TIME, UPDATE_USER_ID, UPDATE_USER_NAME, UPDATE_TIME, ENABLE_PASSWORD
+    </sql>
+
+    <select id="getUserInfo" resultType="com.thinvent.entity.SUser">
+        select * from s_user
+        <where>
+            <if test="fullName!=null and fullName!=''">
+            AND FULL_NAME like concat('%',concat(#{fullName},'%'))
+        </if>
+            <if test="loginName!=null and loginName!=''">
+                AND LOGIN_NAME LIKE concat('%',concat(#{loginName},'%'))
+            </if>
+            <if test="phone!=null and phone!=''">
+                AND PHONE LIKE concat('%',concat(#{phone},'%'))
+            </if>
+        </where>
+        ORDER BY CREATE_TIME DESC
+    </select>
+
+</mapper>

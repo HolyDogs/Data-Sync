@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.thinvent.mapper.IppMapper">
+
+    <select id="findData" resultType="com.thinvent.entity.UserSpace">
+      select * from (select username,default_tablespace from dba_users order by username)
+    </select>
+
+
+    <!-- 插入迁移表 -->
+    <insert id="insertToDataMove">
+        insert into YW_SYSTEM_DATA_MOVE(SJQY_ID,QSSJ,JZSJ,SJID,ZBID,ZBMC,ZBMCFZ,SZ,DWID,DWMC,DQID,DQMC,LYID,TIMEID) values(
+        #{theMap.ID},#{theMap.MONTH_MTH_START_DATE},#{theMap.MONTH_END_DATE},#{theMap.TIME_ID},
+        #{theMap.ENROL_ID},#{theMap.ENROL_NAME},#{theMap.ZBMCFZ},#{theMap.ROW,jdbcType=VARCHAR,typeHandler=com.thinvent.handler.NullValueHandler},#{theMap.ORG_ID},
+        #{theMap.ORG_NAME},#{theMap.AREA_ID},#{theMap.AREA_NAME},#{theMap.LYID},CONCAT('M-',REPLACE(SUBSTR(#{theMap.MONTH_MTH_START_DATE}, 1, 7), '-')))
+    </insert>
+
+
+    <!-- 查询指标池 -->
+    <select id="getPoolZb" resultType="com.thinvent.entity.PoolZb">
+        select case when sysdate-max(a.create_time)over(partition by a.zbkey)<![CDATA[<=]]>30 then 'true' else 'false' end as isNewZb,a.* from POOL_ZB a
+        <where>
+            <if test="zbmc!=null and zbmc!=''">
+              AND (a.ZBMC LIKE CONCAT(CONCAT('%', #{zbmc}), '%') or a.comments LIKE CONCAT(CONCAT('%', #{zbmc}), '%'))
+            </if>
+            <if test="bindzb!=null and bindzb!=''">
+              AND a.BIND_ZB like CONCAT(CONCAT('%', #{bindzb}), '%')
+            </if>
+            <if test="state!=null and state!=''">
+              AND a.state = #{state}
+            </if>
+            <if test="lyTable!=null and lyTable!=''">
+                AND a.SOURCE_MARK = #{lyTable}
+            </if>
+            <if test="zbfl!=null and zbfl!=''">
+                AND a.ZBFL = #{zbfl}
+            </if>
+        </where>
+        ORDER BY CREATE_TIME desc nulls last,a.ZBKEY,a.SOURCE_MARK,a.ZBFL,a.ZBMC
+    </select>
+
+    <!-- 更新绑定指标 -->
+    <update id="updateBindZbById">
+        update POOL_ZB SET BIND_ZB = #{bindzb},STATE = #{state} WHERE id = #{id}
+    </update>
+
+    <!-- 寻找指标名称及分类是否已存在 -->
+    <select id="findZbmc" resultType="java.lang.Integer">
+        select count(1) from POOL_ZB
+        <where>
+            zbmc = #{zbmc} AND SOURCE_MARK = 'YW_SYSTEM_DATA_MOVE'
+            <if test="zbfl!=null and zbfl!=''">
+                AND zbfl = #{zbfl}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertPoolZb">
+        insert into POOL_ZB(ID, SOURCE_MARK, ZBMC, BIND_ZB, ZBFL, JLDW, ZBKEY, CREATE_TIME)
+        values(#{poolzb.id}, #{poolzb.sourceMark}, #{poolzb.zbmc}
+        , #{poolzb.bindZb}, #{poolzb.zbfl}, #{poolzb.jldw}
+        , #{poolzb.zbkey}, sysdate)
+    </insert>
+
+
+    <update id="createZbTable">
+        CREATE TABLE ${tableName}(
+          ID VARCHAR2(34) NOT NULL,
+          ZBMC VARCHAR(255),
+          VALUE VARCHAR(20),
+          DATA_SOURCE VARCHAR(40),
+          START_DATE CHAR(10),
+          END_DATE CHAR(10),
+          TIME_ID VARCHAR(20),
+          DWMC VARCHAR2(200),
+          DQMC VARCHAR2(100),
+          DQBM VARCHAR2(30),
+          JLDW VARCHAR2(20),
+          ZBKEY VARCHAR2(30),
+          PRIMARY KEY(ID)
+        )
+    </update>
+
+    <!--解绑指标-->
+    <update id="unbundPoolZb">
+        UPDATE POOL_ZB SET BIND_ZB = NULL,STATE = '0' WHERE ID = #{id}
+    </update>
+
+    <!--更新指标状态-->
+    <update id="updateStateByIds">
+        UPDATE POOL_ZB SET STATE = #{state} where ID IN
+        <foreach collection="idList" item="theId" open="(" close=")" separator=",">
+            #{theId}
+        </foreach>
+    </update>
+
+    <!--获取所有指标名称-->
+    <select id="getAllZbmcAndFl" resultType="java.util.HashMap">
+        SELECT ID,ZBMC,ZBFL,SOURCE_MARK FROM POOL_ZB
+        <where>
+            <if test="sourceMark!=null and sourceMark!=''">
+                SOURCE_MARK != #{sourceMark}
+            </if>
+        </where>
+        ORDER BY ZBFL,ZBMC
+    </select>
+
+    <select id="getPoolZbById" resultType="com.thinvent.entity.PoolZb">
+        SELECT * FROM POOL_ZB
+        <where>
+            <if test="id!=null">
+                ID = #{id}
+            </if>
+        </where>
+    </select>
+
+    <!--根据来源id查询指标分类-->
+    <select id="selectZbflByLyId" resultType="java.lang.String">
+        SELECT ZBFL FROM YW_SYSTEM_DATA_SOURCE WHERE YWXTLY_ID = #{id}
+    </select>
+
+    <!--根据指标名称及分类查询指标-->
+    <select id="getPoolZbByZbAndFl" resultType="com.thinvent.entity.PoolZb">
+        select * from POOL_ZB
+        <where>
+            <if test="zbmc!=null">
+                AND ZBMC = #{zbmc}
+            </if>
+            <if test="zbfl!=null">
+                AND ZBFL = #{zbfl}
+            </if>
+        </where>
+    </select>
+
+    <!--获取不重复的指标分类集合-->
+    <select id="getZbflList" resultType="java.util.HashMap">
+        SELECT DISTINCT ZBFL, SOURCE_MARK ZBLY FROM POOL_ZB
+    </select>
+
+    <select id="getPoolZbByFl" resultType="com.thinvent.entity.PoolZb">
+        SELECT * FROM POOL_ZB
+        <where>
+            <if test="zbmc!=null and zbmc!=''">
+                AND ZBMC like CONCAT(CONCAT('%', #{zbmc}), '%')
+            </if>
+            <if test="zbfl!=null and zbfl!=''">
+                AND ZBFL = #{zbfl}
+            </if>
+            <if test="sourceMark!=null and sourceMark!=''">
+                AND SOURCE_MARK = #{sourceMark}
+            </if>
+        </where>
+        ORDER BY SOURCE_MARK,ZBFL,ZBMC
+    </select>
+
+    <select id="getPoolZbsByIds" resultType="com.thinvent.entity.PoolZb">
+        SELECT A.*,(CASE WHEN A.SOURCE_MARK = 'YW_SYSTEM_DATA_MOVE' THEN '工业运行监测'
+        WHEN A.SOURCE_MARK = 'DIC_STATISTIC_ZB' THEN '国家数据网'
+        WHEN A.SOURCE_MARK = 'EXCEL_HAND_IMPORT' THEN '手动导入' END) zbly FROM POOL_ZB A WHERE
+        <choose>
+            <when test="idList==null or idList.size == 0">
+                1=2
+            </when>
+            <otherwise>
+                A.ID IN
+                <foreach collection="idList" separator="," open="(" close=")" item="theId">
+                    #{theId}
+                </foreach>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getZbflAndLyList" resultType="java.util.HashMap">
+        SELECT DISTINCT SOURCE_MARK, ZBFL,
+          case when sysdate-max(CREATE_TIME)<![CDATA[<=]]>30 then 'true' else 'false' end as NEWZB
+        FROM POOL_ZB group by SOURCE_MARK, ZBFL
+    </select>
+
+    <insert id="insertIntoZbTableFromStatisticZb">
+        INSERT INTO ${tableName}
+         (SELECT LOWER(RAWTOHEX(sys_guid())) AS ID,
+         #{zbmc} AS ZBMC,
+         A.SZ AS VALUE,
+         'STATISTIC_ZB' AS DATA_SOURCE,
+         B.QSSJ AS START_DATE,
+         B.JZSJ AS END_DATE,
+         A.SJID AS TIME_ID,
+         NULL AS DWMC,
+         A.DQMC,
+         A.DQBM,
+         #{jldw} AS JLDW,
+         #{zbkey} AS ZBKEY
+         FROM STATISTIC_ZB A,DIC_DATE_ZB B
+         WHERE A.ZBKEY = #{zbkey} AND A.SJID = B.ID
+         <if test="startTime!=null and startTime!=''">
+             And to_number(substr(A.SJID,3,6))<![CDATA[>=]]>to_number(#{startTime})
+         </if>
+         <if test="endTime!=null and endTime!=''">
+             And to_number(substr(A.SJID,3,6))<![CDATA[<=]]>to_number(#{endTime})
+         </if>
+         )
+    </insert>
+
+    <update id="createZbZsTable">
+        CREATE TABLE ${tableName}(
+          ID VARCHAR2(34) NOT NULL,
+          ZBMC VARCHAR(255),
+          VALUE VARCHAR(20),
+          DATA_SOURCE VARCHAR(40),
+          START_DATE CHAR(10),
+          END_DATE CHAR(10),
+          TIME_ID VARCHAR(20),
+          DWMC VARCHAR2(200),
+          DQMC VARCHAR2(100),
+          DQBM VARCHAR2(30),
+          JLDW VARCHAR2(20),
+          NEW_VALUE VARCHAR(20),
+          STATE CHAR(1),
+          STATISTIC_MARK VARCHAR2(10),
+          ZBKEY VARCHAR2(30),
+          PRIMARY KEY(ID)
+        )
+    </update>
+
+    <update id="updateCommentById">
+        update POOL_ZB SET COMMENTS = #{comment} WHERE id = #{id}
+    </update>
+
+    <update id="updateJldwById">
+        UPDATE POOL_ZB SET JLDW = #{jldw} WHERE id = #{id}
+    </update>
+
+    <select id="checkPoolZb" resultType="java.lang.Integer">
+        select count(1) from POOL_ZB a
+        where a.ZBMC=#{zbmc} and a.SOURCE_MARK=#{lyTable} and a.ZBFL = #{zbfl}
+    </select>
+
+    <select id="getLastDateByLyid" resultType="java.lang.String">
+        SELECT MAX(QSSJ) FROM YW_SYSTEM_DATA_MOVE WHERE LYID = #{lyid}
+    </select>
+
+</mapper>

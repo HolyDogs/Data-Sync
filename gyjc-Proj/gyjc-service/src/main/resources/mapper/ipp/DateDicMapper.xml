@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.thinvent.mapper.DateDicMapper">
+    <insert id="saveDicDateZb">
+        INSERT INTO DIC_DATE_ZB(ID, QSSJ, JZSJ, SJMC, SJZ, SJBM)
+        VALUES(#{theMap.ID},#{theMap.QSSJ},#{theMap.JZSJ},#{theMap.SJMC},#{theMap.SJZ},#{theMap.SJBM})
+    </insert>
+
+
+    <select id="findNotExistTimeId" resultType="java.util.HashMap">
+        SELECT * FROM (SELECT DISTINCT(Y.TIMEID) ID,Y.QSSJ,Y.JZSJ FROM YW_SYSTEM_DATA_MOVE Y) Z WHERE NOT EXISTS(SELECT 1 FROM DIC_DATE_ZB D WHERE Z.ID = D.ID)
+    </select>
+</mapper>

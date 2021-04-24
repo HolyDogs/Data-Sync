@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.thinvent.mapper.PoolZbNewTableMapper">
+
+
+    <insert id="insertData">
+        INSERT INTO POOL_ZB_NEW_TABLE(ID, TABLE_NAME, ZBID, CREATE_TIME, TABLE_COMMENTS,START_TIME,END_TIME,ZTKBM,ZTKMC) VALUES(#{newTableData.id}, #{newTableData.tableName}
+        , #{newTableData.zbId}, #{newTableData.createTime}
+        , #{newTableData.tableComments},#{newTableData.startTime}
+        ,#{newTableData.endTime},#{newTableData.ztkbm},#{newTableData.ztkmc})
+    </insert>
+
+    <update id="dropTable">
+        DROP TABLE ${tableName}
+    </update>
+
+    <!--更新指标表信息-->
+    <update id="updatePoolZbNewTableById">
+        UPDATE POOL_ZB_NEW_TABLE SET
+        <if test="theData!=null">
+            ZBID = #{theData.zbId}  WHERE ID = #{theData.id}
+        </if>
+    </update>
+
+    <delete id="deleteTableByTableName">
+        DELETE FROM POOL_ZB_NEW_TABLE WHERE TABLE_NAME = #{tableName}
+    </delete>
+
+    <!--删除tableName表内所有zbmc的数据-->
+    <delete id="deleteTableData">
+        DELETE FROM ${tableName} WHERE ZBKEY=#{zbkey}
+    </delete>
+
+    <select id="selectNewTableData" resultType="com.thinvent.entity.PoolZbNewTable">
+        SELECT * FROM POOL_ZB_NEW_TABLE
+        <where>
+            <if test="tableName!=null and tableName!=''">
+                AND TABLE_NAME LIKE CONCAT('%', CONCAT(#{tableName}, '%'))
+            </if>
+            <if test="tableType!=null and tableType!=''">
+                AND ZTKBM LIKE CONCAT(#{tableType}, '%')
+            </if>
+            <if test="createStartTime!=null and createStartTime!=''">
+                AND to_date(to_char(CREATE_TIME,'yyyy/MM/dd'),'yyyy-MM-dd')<![CDATA[>=]]>to_date(#{createStartTime},'YYYY-MM-DD')
+            </if>
+            <if test="createEndTime!=null and createEndTime!=''">
+                AND to_date(to_char(CREATE_TIME,'yyyy/MM/dd'),'yyyy-MM-dd')<![CDATA[<=]]>to_date(#{createEndTime},'YYYY-MM-DD')
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="getPoolZbNewTableById" resultType="com.thinvent.entity.PoolZbNewTable">
+        SELECT * FROM POOL_ZB_NEW_TABLE WHERE ID = #{id}
+    </select>
+
+    <select id="selectZbTableData" resultType="com.thinvent.dto.ZbTableDto">
+        SELECT * FROM ${tableName}
+        <where>
+            <if test="zbmc!=null and zbmc!=''">
+                AND ZBMC LIKE CONCAT(CONCAT('%', #{zbmc}), '%')
+            </if>
+            <if test="dataSource!=null and dataSource!=''">
+                AND DATA_SOURCE = #{dataSource}
+            </if>
+            <if test="startDate!=null and startDate!=''">
+                AND START_DATE <![CDATA[ >= ]]> #{startDate}
+            </if>
+            <if test="endDate!=null and endDate!=''">
+                AND END_DATE <![CDATA[ <= ]]> #{endDate}
+            </if>
+            <if test="dwmc!=null and dwmc!=''">
+                AND DWMC LIKE CONCAT(CONCAT('%', #{dwmc}), '%')
+            </if>
+            <if test="dqmc!=null and dqmc!=''">
+                AND DQMC LIKE CONCAT(CONCAT('%', #{dqmc}), '%')
+            </if>
+            <if test="tableName.endsWith('_ZS')">
+                AND STATE = '1'
+            </if>
+        </where>
+        ORDER BY DATA_SOURCE,ZBMC,START_DATE DESC
+    </select>
+
+    <insert id="insertZbTableFromYWDATAMOVE">
+         INSERT INTO ${tableName}
+         (SELECT LOWER(RAWTOHEX(sys_guid())) AS ID,
+         #{zbmc} AS ZBMC,
+         (CASE WHEN A.SZ='无' THEN NULL ELSE A.SZ END) AS VALUE,
+         'YW_SYSTEM_DATA_MOVE' AS DATA_SOURCE,
+         A.QSSJ,
+         A.JZSJ,
+         A.TIMEID AS TIME_ID,
+         A.DWMC,
+         A.DQMC,
+         A.DQID AS DQBM,
+         #{jldw} AS JLDW,
+         #{zbkey} AS ZBKEY
+         FROM YW_SYSTEM_DATA_MOVE A
+         WHERE A.ZBKEY = #{zbkey}
+        <if test="startTime!=null and startTime!=''">
+            And to_number(substr(A.TIMEID,3,6))<![CDATA[>=]]>to_number(#{startTime})
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            And to_number(substr(A.TIMEID,3,6))<![CDATA[<=]]>to_number(#{endTime})
+        </if>
+         )
+    </insert>
+
+     <insert id="insertZSZBData">
+        INSERT INTO ${newTableName}
+        (SELECT A.ID, replace(A.ZBMC,' ',''), A.VALUE, A.DATA_SOURCE, A.START_DATE, A.END_DATE, A.TIME_ID, A.DWMC, A.DQMC, A.DQBM, A.JLDW
+        , NULL as NEW_VALUE,'1' as STATE,NULL AS STATISTIC_MARK,A.ZBKEY
+        FROM ${tableName} A WHERE A.ZBKEY=#{zbkey}
+          <if test="startDate!=null and startDate!=''">
+              AND to_number(substr(time_id,3,6))<![CDATA[>=]]>to_number(#{startDate})
+          </if>
+          <if test="endDate!=null and endDate!=''">
+              AND to_number(substr(time_id,3,6))<![CDATA[<=]]>to_number(#{endDate})
+          </if>
+        )
+    </insert>
+
+    <select id="getNewTableData" resultType="com.thinvent.entity.PoolZbNewTable">
+        SELECT * FROM POOL_ZB_NEW_TABLE
+        <where>
+            <if test="tableName!=null and tableName!=''">
+                AND TABLE_NAME LIKE #{tableName}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="getLatestDateOfZb" resultType="java.util.HashMap">
+        SELECT B.ID,A.ZBKEY,MAX(TO_CHAR(ADD_MONTHS((TO_DATE(A.START_DATE, 'yyyy-MM-dd')), 1), 'yyyy-MM-dd')) LASTDATE
+        FROM ${tableName} A INNER JOIN POOL_ZB B ON A.ZBKEY = B.ZBKEY GROUP BY A.ZBKEY,B.ID
+    </select>
+
+</mapper>

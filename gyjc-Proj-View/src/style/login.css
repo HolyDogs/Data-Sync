@@ -1,0 +1,124 @@
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+  .login {
+    position: relative;
+    height: 100vh;
+    margin-bottom: 0px;
+    text-align: center;
+    background: url(../images/login_bg.png)no-repeat center center / 100% 100%;
+  }
+
+  .form-control {
+    text-align: center;
+  }
+
+  .theform {
+    position: absolute;
+    margin: 0 auto;
+    right: 9.6354166vw;
+    top: 17.129629vh;
+  }
+
+  .loginText {
+    color: #06cdff;
+    letter-spacing: 0;
+    text-shadow: 2px 2px 1px #05a7c5,4px 4px 1px #054a66;
+    font-size: 2.5vw;
+    line-height: 2.5vw;
+    font-weight: bold;
+  }
+  .loginform{
+    margin-top: 2.34375vw;
+    width: 26.25vw;
+    height: 29.9479167vw;
+    box-sizing: border-box;
+    padding: 2.6041667vw 3.125vw;
+    background: url(../images/loginform_bg.png)no-repeat center center / 100% 100%;
+    position: relative;
+  }
+  .form-title{
+    font-size: 1.5625vw;
+    font-weight: bold;
+    color: #06cdff;
+    text-align: left;
+    margin-bottom: 1.822916vw;
+  }
+.theform .el-input {
+    border-bottom: 1px solid #035869;
+    height: 2.083333vw;
+    padding: 1.0416667vw 0;
+    display: flex;
+  }
+.theform .el-input input{
+    border: 0;
+    background-color: transparent;
+    color: #fff;
+    font-size: 0.9375vw;
+    height: 100%;
+    line-height: 2.083333vw;
+    padding-left: 2.083333vw!important;
+  }
+ .theform.el-input__icon{
+    color: #06cdff;
+    font-size: 0.9375vw;
+    width: 0.9375vw;
+  }
+.theform .el-form-item{
+    margin-bottom: 0;
+  }
+.theform  .code .el-input{
+    border: 0;
+    height: 40px;
+  }
+  .code .el-input input{
+    border: 1px solid #035869;
+    border-radius: 0;
+    height: 40px;
+    padding-left: 10px!important;
+  }
+.theform .el-input input::-webkit-input-placeholder { /* WebKit browsers */
+    color: #fff;
+}
+  .code .el-row{
+    display: flex;
+    align-items: center;
+  }
+  .code .el-row #s-canvas{
+    margin-top: 0;
+  }
+.theform .el-button--success.is-plain{
+    width: 100%;
+    background-color: #14aad4;
+    border: 0;
+    border-radius: 0;
+    height: 3.125vw;
+    box-sizing: border-box;
+    margin-top: 1.5vw;
+  }
+.theform .el-button--success span{
+    font-size: 20px;
+    color: #fff;
+  }
+.theform  .form-foot{
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    bottom: 2.2vw;
+    left: 0;
+    color: #8da3ab;
+    font-size: 14px;
+  }
+  .form-foot span{
+    cursor: pointer;
+    color: #06bcff;
+  }
+  .reg .el-input{
+    padding: .8vw 0;
+  }
+  .reg .code{
+    margin-top: .6vw;
+  }

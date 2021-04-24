@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.thinvent.mapper.DicMapper">
+       <select id="getDicList" resultType="java.util.HashMap">
+        SELECT t.item_key,t.item_value FROM s_dictionary_items t
+        WHERE t.group_no=#{groupNo} and t.data_type=#{dataType}
+       <choose>
+           <when test="enable!=null and enable == 0">
+               and t.enable=#{enable}
+           </when>
+           <when test="enable!=null and enable == 1">
+               and t.enable=#{enable}
+           </when>
+       </choose>
+    </select>
+
+    <select id="getItemKeyByValue" resultType="java.lang.String">
+        SELECT ITEM_KEY FROM S_DICTIONARY_ITEMS WHERE ITEM_VALUE=#{itemValue} AND GROUP_NO=#{groupNum} AND ENABLE=1
+    </select>
+
+
+    <select id="getDicInfo" resultType="com.thinvent.entity.DicItem">
+        SELECT * FROM s_dictionary_items where ENABLE=1
+            <if test="groupNo!=null">
+                AND GROUP_NO=#{groupNo}
+            </if>
+            <if test="itemKey!=null and itemKey!=''">
+                AND ITEM_KEY=#{itemKey}
+            </if>
+            <choose>
+                <when test="itemParent==null or itemParent.size==0">
+                </when>
+                <otherwise>
+                    AND ITEM_PARENT in
+                    <foreach collection="itemParent" separator="," open="(" close=")" item="parent">
+                        #{parent}
+                    </foreach>
+                </otherwise>
+            </choose>
+            <if test="itemValue!=null and itemValue!=''">
+                AND ITEM_VALUE like CONCAT(CONCAT('%', #{itemValue}), '%')
+            </if>
+            <if test="areaLevel!=null ">
+                AND AREA_LEVEL=#{areaLevel}
+            </if>
+            <if test="dataType!=null ">
+                AND DATA_TYPE=#{dataType}
+            </if>
+    </select>
+
+    <select id="getMaxOrSelf" resultType="java.lang.String">
+        SELECT t1.item_key FROM s_dictionary_items t1 WHERE t1.item_key like CONCAT(CONCAT('%', #{itemKey}), '%') and t1.group_no=#{groupNo}
+        <if test="itemValue!=null and itemValue!=''">
+            AND ITEM_VALUE like CONCAT(CONCAT('%', #{itemValue}), '%')
+        </if>
+          union all
+        SELECT max(t1.item_key) FROM s_dictionary_items t1 WHERE t1.item_key like CONCAT(CONCAT('%', #{itemKey}), '%') and t1.group_no=#{groupNo}
+    </select>
+</mapper>
